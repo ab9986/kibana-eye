@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,7 +26,8 @@ public class LoginInfoController {
     public Response all() {
 //        List<LoginInfoResponse> result = new ArrayList<>();
         List<LoginInfo> infoList = loginInfoRepository.findAll();
-//        infoList.stream().forEach(item -> {
+        Collections.reverse(infoList);
+        //        infoList.stream().forEach(item -> {
 //            LoginInfoResponse infoResponse = new LoginInfoResponse();
 //            infoResponse.setClientType(item.getClientType());
 //            infoResponse.setMobile(item.getMobile());

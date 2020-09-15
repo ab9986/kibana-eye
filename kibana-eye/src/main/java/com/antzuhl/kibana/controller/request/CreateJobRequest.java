@@ -12,6 +12,8 @@ import java.util.List;
 @Data
 public class CreateJobRequest {
 
+    private Long id;
+
     private String indexName;
 
     private String application;

@@ -6,6 +6,7 @@ import com.antzuhl.kibana.domain.SearchJob;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,9 @@ import java.util.Map;
 @RequestMapping("/file")
 public class FileController {
 
+    @Value("${ke.file.url}")
+    private String baseFileUrl;
+
     @Autowired
     private SearchJobRepository searchJobRepository;
 
@@ -38,7 +42,7 @@ public class FileController {
         if (!fileName.endsWith(".py")) {
             return Response.error("上传失败，请上传python文件");
         }
-        String filePath = "D:/kibana-eye/upload/" + fileName;
+        String filePath = baseFileUrl + fileName;
         File dest = new File(filePath);
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> fileMap = new HashMap<>();

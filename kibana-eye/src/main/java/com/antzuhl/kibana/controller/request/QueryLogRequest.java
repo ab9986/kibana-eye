@@ -1,7 +1,6 @@
 package com.antzuhl.kibana.controller.request;
 
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author AntzUhl

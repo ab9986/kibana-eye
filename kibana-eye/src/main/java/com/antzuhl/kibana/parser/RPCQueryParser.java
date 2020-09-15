@@ -11,7 +11,7 @@ import com.alibaba.fastjson.JSONObject;
 public class RPCQueryParser {
 
     public static String css_highlight(int count, String color) {
-        if (count > 0)
+        if (count > 10)
             return " style=\"background: " + color + "\"";
         else
             return "";
@@ -61,11 +61,13 @@ public class RPCQueryParser {
                 "      <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />" + html_style() + "</head>\n" +
                 "      <body>\n" +
                 "        <table>\n" +
+                "<tr><td colspan=\"7\" style=\"background:#92D14F\">&nbsp;应用名称: "+ applicationName +" </td></tr>" +
                 "          <tr>\n" +
-                "            <th style=\"width: 20%\">应用名字(webapp,worker,dubbo)</th>\n" +
+                "            <th style=\"width: 20%\">类名(次数)</th>\n" +
+                "            <th style=\"width: 10%\">方法</th>\n" +
                 "            <th style=\"width: 10%\">次数</th>\n" +
                 "          </tr>";
-        String time_html_end = "<tr><td colspan=\"7\" style=\"background:#92D14F\">&nbsp;SQL耗时统计：重点关注200ms以上的 </td></tr></table></body></html>";
+        String time_html_end = "<tr><td colspan=\"7\" style=\"background:#92D14F\">&nbsp;超时次数>10飘红   总次数: ${sum_count} </td></tr></table></body></html>";
         try {
             JSONObject json = JSON.parseObject(result);
             String trBody = "";
@@ -73,37 +75,30 @@ public class RPCQueryParser {
             int length = array.size();
             for (int i=0; i<length; i++) {
                 JSONObject item = array.getJSONObject(i);
-                String db_table = item.getString("key");
                 Integer total = item.getInteger("doc_count");
-
-                JSONObject d_c_b = item.getJSONObject("3").getJSONObject("buckets");
-
-                Integer status_lt_100 = d_c_b.getJSONObject("100ms").getInteger("doc_count");
-                Integer status_lt_200 = d_c_b.getJSONObject("100-200ms").getInteger("doc_count");
-                Integer status_200_between_500 = d_c_b.getJSONObject("200-500ms").getInteger("doc_count");
-                Integer status_500_between_1000 = d_c_b.getJSONObject("500-1000ms").getInteger("doc_count");
-                Integer status_tt_1s = d_c_b.getJSONObject(">1s").getInteger("doc_count");
-
-                System.out.printf("\t%s,\t%s,\t%s,\t%s,\t%s,\t%s,\t%s" ,db_table, total, status_lt_100,
-                        status_lt_200, status_200_between_500, status_500_between_1000, status_tt_1s);
-
-                float val_100 = Math.round((float)status_lt_100 / (float)(total)*100);
-                float val_200 = Math.round((float)status_lt_200 / (float)(total)*100);
-                float val_200_500 = Math.round((float)status_200_between_500 / (float)(total)*100);
-                float val_500_1000 = Math.round((float)status_500_between_1000 / (float)(total)*100);
-                float val_1s = Math.round((float)status_tt_1s / (float)(total)*100);
-                String tr_body_item = String.format("<tr><td>%s</td><td>%s</td><td>%s(%s)</td><td>%s(%s)</td><td%s>%s(%s)</td><td%s>%s(%s)</td><td%s>%s(%s)</td></tr>",
-                        db_table, total, status_lt_100, val_100,
-                        status_lt_200, val_200, css_highlight(status_200_between_500, "moccasin"),
-                        status_200_between_500, val_200_500,
-                        css_highlight(status_500_between_1000, "sandybrown"), status_500_between_1000,
-                        val_500_1000, css_highlight(status_tt_1s, "orangered"), status_tt_1s,
-                        val_1s);
-                trBody += tr_body_item;
+                time_html_end = time_html_end.replace("${sum_count}", " "+total);
+                String appName = item.getString("key");
+                trBody += "<tr><td colspan=\"7\" style=\"background:#F1F8FF\">"+ appName +"</td></tr>";
+                JSONArray className = item.getJSONObject("3").getJSONArray("buckets");
+                int buck_length = className.size();
+                for (int j = 0; j < buck_length; j++) {
+                    JSONObject classItem = className.getJSONObject(j);
+                    // 处理每一个类中
+                    Integer count = classItem.getInteger("doc_count");
+                    String class_name = classItem.getString("key");
+                    JSONArray func = classItem.getJSONObject("4").getJSONArray("buckets");
+                    int func_count = func.size();
+                    for (int k = 0; k < func_count; k++) {
+                        JSONObject func_item = func.getJSONObject(k);
+                        String func_name = func_item.getString("key");
+                        int func_rpc_count = func_item.getInteger("doc_count");
+                        trBody += "<tr><td>" + class_name + "  ("+ count +")"  + "</td>  <td>"+ func_name +"</td> <td" + css_highlight(func_rpc_count, "orangered") + ">"+ func_rpc_count +"</td> </tr>";
+                    }
+                }
             }
             return timeHtmlBegin + trBody + time_html_end;
         } catch (Exception e) {
-            return timeHtmlBegin + "查询异常" + time_html_end;
+            return timeHtmlBegin + "<tr><td>查询异常</td><tr>" + time_html_end;
         }
     }
 

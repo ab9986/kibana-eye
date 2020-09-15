@@ -7,7 +7,7 @@
       :on-success="handleImageSuccess"
       class="image-uploader"
       drag
-      action="http://localhost:8888/file/upload"
+      action="http://10.155.19.111:8888/file/upload"
     >
       <i class="el-icon-upload" />
       <div class="el-upload__text">

@@ -54,7 +54,7 @@ public class SQLQueryParser {
             }
             return timeHtmlBegin + trBody + time_html_end;
         } catch (Exception e) {
-            return timeHtmlBegin + "查询异常" + time_html_end;
+            return timeHtmlBegin + "<tr><td>查询异常</td><tr>" + time_html_end;
         }
     }
 

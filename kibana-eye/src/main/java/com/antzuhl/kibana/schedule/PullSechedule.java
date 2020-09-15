@@ -36,7 +36,7 @@ public class PullSechedule {
     LoginInfoRepository loginInfoRepository;
 
 //    @Scheduled(fixedDelay = 3000)
-    @Scheduled(cron = "0 0 10 ? * *" )
+    @Scheduled(cron = "0 0 9 ? * *" )
     public void reportCurrentTime() {
         //  get local time,
         Calendar calendar = Calendar.getInstance();
@@ -46,7 +46,8 @@ public class PullSechedule {
         calendar.set(Calendar.HOUR_OF_DAY,0);
         // get stop time
         long lte = calendar.getTime().getTime();
-        calendar.set(Calendar.HOUR_OF_DAY,-24);
+        calendar.set(Calendar.HOUR_OF_DAY, -24);
+//        calendar.set(Calendar.DAY_OF_MONTH, -3);
         // get start time
         long gte = calendar.getTime().getTime();
         IndexDetail indexDetail = new IndexDetail();

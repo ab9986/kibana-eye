@@ -16,7 +16,7 @@
       :key="imagecropperKey"
       :width="300"
       :height="300"
-      url="http://localhost:8888/file/upload"
+      url="http://10.155.19.111:8888/file/upload"
       lang-type="en"
       @close="close"
       @crop-upload-success="cropSuccess"

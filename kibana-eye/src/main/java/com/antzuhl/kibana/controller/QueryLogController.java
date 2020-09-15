@@ -3,7 +3,9 @@ package com.antzuhl.kibana.controller;
 import com.antzuhl.kibana.common.Response;
 import com.antzuhl.kibana.dao.QueryLogRepository;
 import com.antzuhl.kibana.domain.QueryLog;
+import com.antzuhl.kibana.parser.RPCQueryParser;
 import com.antzuhl.kibana.parser.SQLQueryParser;
+import com.antzuhl.kibana.parser.WebappTimeParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +34,7 @@ public class QueryLogController {
         if (StringUtils.isEmpty(type)) {
             return Response.error("查询参数错误");
         }
-        log.info("query Request : {}", type);
         List<QueryLog> result = queryLogRepository.findQueryLogsByType(type);
-        log.info("query Request : {}", result);
         Map<String, Object> map = new HashMap<>();
         if (CollectionUtils.isEmpty(result)) {
             map.put("total", 0);
@@ -61,7 +61,14 @@ public class QueryLogController {
         Optional<QueryLog> optional = queryLogRepository.findById(id);
         if (optional.isPresent()) {
             QueryLog queryLog = optional.get();
-            String resultHtml = SQLQueryParser.parser(queryLog.getApplication(), queryLog.getQuery());
+            String resultHtml = "";
+            if (StringUtils.equals(queryLog.getType(), "sql")) {
+                resultHtml = SQLQueryParser.parser(queryLog.getApplication(), queryLog.getQuery());
+            } else if (StringUtils.equals(queryLog.getType(), "rpc")) {
+                resultHtml = RPCQueryParser.parser(queryLog.getApplication(), queryLog.getQuery());
+            } else if (StringUtils.equals(queryLog.getType(), "webapp_time")) {
+                resultHtml = WebappTimeParser.parser(queryLog.getApplication(), queryLog.getQuery());
+            }
             return Response.success("success", resultHtml);
         } else {
             return Response.error("没有该记录");

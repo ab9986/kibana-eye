@@ -12,7 +12,7 @@
         :on-success="handleSuccess"
         :before-upload="beforeUpload"
         class="editor-slide-upload"
-        action="http://localhost:8888/file/upload"
+        action="http://10.155.19.111:8888/file/upload"
         list-type="picture-card"
       >
         <el-button size="small" type="primary">

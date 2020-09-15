@@ -73,10 +73,14 @@ public class SearchJobController {
             return Response.error("参数错误");
         }
         SearchJob searchJob = new SearchJob();
+        log.info("update : {}", createJobRequest);
+        searchJob.setId(createJobRequest.getId());
         searchJob.setApplication(createJobRequest.getApplication());
         searchJob.setIndexName(createJobRequest.getIndexName());
         searchJob.setType(createJobRequest.getRegion());
-        searchJob.setQuery(createJobRequest.getContent().replace("<p>", "").replace("</p>", ""));
+        searchJob.setQuery(createJobRequest.getContent().replace("<p>", "")
+                .replace("</p>", "").replace("&lt;", "<")
+                .replace("&gt;", ">"));
         searchJob.setSendTo(createJobRequest.getSendTo());
         searchJob.setSendCc(createJobRequest.getSendCc());
         searchJob.setDeleted(0);
@@ -87,9 +91,9 @@ public class SearchJobController {
         if (not != null) {
             if (not.size() == 2) {
                 searchJob.setNotice(3);
-            } else if (not.contains("mail")) {
+            } else if (not.contains("邮箱")) {
                 searchJob.setNotice(1);
-            } else if (not.contains("ding")) {
+            } else if (not.contains("钉钉")) {
                 searchJob.setNotice(2);
             }
         }
@@ -102,7 +106,7 @@ public class SearchJobController {
             queryTask.setSearchJob(save);
             queryTask.setQueryLogRepository(queryLogRepository);
             queryTask.setKey((int) (time/1000));
-//            log.info("真实的延迟时间: {}", time/1000);
+            log.info("真实的延迟时间: {}", time/1000);
             // 暂时使用30秒代替
 //            queryTask.setKey(13);
             DelayQueue.addTask(queryTask);

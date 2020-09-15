@@ -10,13 +10,15 @@ spring:
 #    username: admin
 #    password: 123456
   jpa:
-    show-sql: true
+#    show-sql: true
     hibernate:
       ddl-auto: update
   application:
     name: es-eye
+  profiles:
+    active: prod
 application:
-  formatted-version: 1.0.1
+  formatted-version: 1.2.0
 
 management:
   endpoints:
@@ -26,3 +28,27 @@ management:
         include: ['httptrace', 'metrics','env','logfile','health']
 logging:
   config: classpath:logback-spring.xml
+
+---
+# 开发环境
+ke:
+  es:
+    url: http://elk-es-6.cluster.koolearn.com/
+  version: development
+  host: 127.0.0.1
+  file:
+    url: D:/kibana-eye/upload/
+spring:
+  profiles: dev
+
+---
+# 生产环境
+ke:
+  es:
+    url: http://elk-es-6.cluster.koolearn.com/
+  version: product
+  host: koolearn.antzuhl.cn
+  file:
+    url: /home/k12app/kibana-eye/upload/
+spring:
+  profiles: prod

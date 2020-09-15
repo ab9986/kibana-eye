@@ -1,7 +1,5 @@
 package com.antzuhl.kibana.common;
 
-import com.alibaba.fastjson.JSON;
-
 /**
  * @author AntzUhl
  * Date 2020/8/25 15:39
@@ -44,8 +42,6 @@ public class Constants {
             "  }\n" +
             "}\n";
 
-    // 此处填写你的ES地址
-    public static final String ES_QUERY_URL = "http://elk-es-6.cluster.koolearn.com/";
 
     public static final String BASE_URL = "http://kibana-bizlog.koolearn.com/api/console/proxy?";
 }

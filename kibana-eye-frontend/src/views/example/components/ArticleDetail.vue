@@ -15,27 +15,39 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="索引名称">
-              <el-select v-model="postForm.indexName" placeholder="选择查询索引">
-                <el-option label="app-mobi_*" value="app-mobi_*" />
-                <el-option label="app-mobictime_*" value="app-mobictime_*" />
-                <el-option label="cat*" value="cat*" />
-                <el-option label="nginx_access_log_*" value="nginx_access_log_*" />
-                <el-option label="sql_*" value="sql_*" />
-              </el-select>
+              <el-autocomplete
+                popper-class="my-autocomplete"
+                v-model="postForm.indexName"
+                :fetch-suggestions="querySearch"
+                placeholder="请输入要查询的索引信息"
+                @select="handleSelect">
+                <i
+                  class="el-icon-edit el-input__icon"
+                  slot="suffix"
+                  @click="handleIconClick">
+                </i>
+                <template slot-scope="{ item }">
+                  <div class="name">{{ item.value }}</div>
+                  <span class="addr">{{ item.address }}</span>
+                </template>
+              </el-autocomplete>
             </el-form-item>
             <el-form-item label="应用名称">
-              <el-select v-model="postForm.application" placeholder="选择查询应用">
-                <el-option label="k12-webapp-item" value="k12-webapp-item" />
-                <el-option label="kooup-webapp-item" value="kooup-webapp-item" />
-                <el-option label="kooup-webapp-student" value="kooup-webapp-student" />
-                <el-option label="kooup-webapp-mobile-student" value="k12-webapp-cms-manage" />
-                <el-option label="k12-webapp-httprpc" value="k12-webapp-httprpc" />
-                <el-option label="koo-k12-observer-webapp" value="koo-k12-observer-webapp" />
-                <el-option label="k12-dubbo-data" value="k12-dubbo-data" />
-                <el-option label="k12-dubbo-data-biz" value="k12-dubbo-data-biz" />
-                <el-option label="k12-dubbo-message-biz" value="k12-dubbo-message-biz" />
-                <el-option label="k12-dubbo-user-task" value="k12-dubbo-user-task" />
-              </el-select>
+              <el-autocomplete
+                popper-class="my-autocomplete"
+                v-model="postForm.application"
+                :fetch-suggestions="querySearchApp"
+                placeholder="请输入要查询的应用"
+                @select="handleSelect">
+                <i
+                  class="el-icon-edit el-input__icon"
+                  slot="suffix"
+                  @click="handleIconClick">
+                </i>
+                <template slot-scope="{ item }">
+                  <div class="name">{{ item.value }}</div>
+                </template>
+              </el-autocomplete>
             </el-form-item>
 
             <div class="postInfo-container">
@@ -131,10 +143,10 @@ import Upload from '@/components/Upload/SingleImage3'
 import Sticky from '@/components/Sticky' // 粘性header组件
 import { validURL } from '@/utils/validate'
 import { fetchArticle, createArticle, queryTemplate } from '@/api/article'
-import { searchUser } from '@/api/remote-search'
 import vueJsonEditor from 'vue-json-editor'
 
 const defaultForm = {
+  id: -1,
   status: 'draft',
   indexName: '',
   sendTo: '',
@@ -145,8 +157,7 @@ const defaultForm = {
   notType: [], // 通知方式
   cycle: true,
   region: '',
-  executeTime: undefined, // 前台展示时间
-  id: undefined
+  executeTime: undefined // 前台展示时间
 }
 
 export default {
@@ -197,7 +208,11 @@ export default {
         content: [{ validator: validateRequire }],
         source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
       },
-      tempRoute: {}
+      tempRoute: {},
+      thisPageId: null,
+      indexList: [],
+      appList: [],
+      state: ''
     }
   },
   computed: {
@@ -214,7 +229,6 @@ export default {
       } catch (e) {
         return {}
       }
-      console.log('keys' + key)
       // key = key.replace(/<\/?.+?>/g, '').toString()
       return JSON.parse(key)
     },
@@ -231,9 +245,14 @@ export default {
       }
     }
   },
+  mounted() {
+    this.indexList = this.loadAllIndex()
+    this.appList = this.loadAllApp()
+  },
   created() {
     if (this.isEdit) {
       const id = this.$route.params && this.$route.params.id
+      this.thisPageId = parseInt(id)
       this.fetchData(id)
     }
 
@@ -295,6 +314,7 @@ export default {
       this.$refs.postForm.validate(valid => {
         if (valid) {
           this.loading = true
+          this.postForm.id = this.thisPageId
           this.postForm.content = this.postForm.content.replace(/<[^>].*?>/g, '\r\n')
           createArticle(this.postForm).then(() => {
             this.$notify({
@@ -330,11 +350,84 @@ export default {
         type: 'warning'
       })
     },
-    getRemoteUserList(query) {
-      searchUser(query).then(response => {
-        if (!response.data.items) return
-        this.userListOptions = response.data.items.map(v => v.name)
-      })
+    querySearch(queryString, cb) {
+      var restaurants = this.indexList
+      var results = queryString ? restaurants.filter(this.createFilter(queryString)) : restaurants
+      // 调用 callback 返回建议列表的数据
+      cb(results)
+    },
+    querySearchApp(queryString, cb) {
+      var restaurants = this.appList
+      var results = queryString ? restaurants.filter(this.createFilter(queryString)) : restaurants
+      // 调用 callback 返回建议列表的数据
+      cb(results)
+    },
+    createFilter(queryString) {
+      return (restaurant) => {
+        return (restaurant.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0)
+      }
+    },
+    loadAllIndex() {
+      return [
+        { 'value': 'app-mobi_*' },
+        { 'value': 'app-mobictime_*' },
+        { 'value': 'app_auto_feedback_*' },
+        { 'value': 'app_vod_*' },
+        { 'value': 'cat*' },
+        { 'value': 'ccp_biz_log_*' },
+        { 'value': 'client_app_log_*' },
+        { 'value': 'client_interactive_log_*' },
+        { 'value': 'client_pv_log_*' },
+        { 'value': 'client_system_log_*' },
+        { 'value': 'dubbo_monitor_*' },
+        { 'value': 'es_slow_log_*' },
+        { 'value': 'falcon_metric' },
+        { 'value': 'first_nginx_access_log_*' },
+        { 'value': 'fms_data_apache_*' },
+        { 'value': 'k12_2020_winter_promote_banke' },
+        { 'value': 'nginx_access_log_*' },
+        { 'value': 'nginx_ratio' },
+        { 'value': 'nginx_ratio_zhishang' },
+        { 'value': 'nginx_status' },
+        { 'value': 'page_coll_*' },
+        { 'value': 'rpc_request_timeout_*' },
+        { 'value': 'sql*' }
+      ]
+    },
+    loadAllApp() {
+      return [
+        { 'value': 'k12-webapp-item' },
+        { 'value': 'kooup-webapp-item' },
+        { 'value': 'kooup-webapp-student' },
+        { 'value': 'kooup-webapp-mobile-student' },
+        { 'value': 'k12-webapp-cms-manage' },
+        { 'value': 'k12-webapp-httprpc' },
+        { 'value': 'koo-k12-tools' },
+        { 'value': 'koo-k12-observer-webapp' },
+        { 'value': 'k12-dubbo-data' },
+        { 'value': 'k12-dubbo-data-biz' },
+        { 'value': 'k12-dubbo-message-biz' },
+        { 'value': 'k12-dubbo-user-task' },
+        { 'value': 'k12-dubbo-user-task-biz' },
+        { 'value': 'koo-k12-cms-dubbo' },
+        { 'value': 'koo-k12-cms-dubbo-biz' },
+        { 'value': 'koo-k12-evaluation-dubbo' },
+        { 'value': 'koo-k12-evaluation-dubbo-biz' },
+        { 'value': 'kooup-dubbo-live' },
+        { 'value': 'kooup-dubbo-project' },
+        { 'value': 'kooup-dubbo-project-biz' },
+        { 'value': 'kooup-dubbo-tools' },
+        { 'value': 'kooup-tesseract-job-core' },
+        { 'value': 'kooup-chronos-project' },
+        { 'value': 'kooup-worker-project' },
+        { 'value': 'k12-worker-message' }
+      ]
+    },
+    handleSelect(item) {
+      console.log(item)
+    },
+    handleIconClick(ev) {
+      console.log(ev)
     }
   }
 }
@@ -389,6 +482,25 @@ export default {
     border: none;
     border-radius: 0px;
     border-bottom: 1px solid #bfcbd9;
+  }
+}
+.my-autocomplete {
+  li {
+    line-height: normal;
+    padding: 7px;
+
+    .name {
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .addr {
+      font-size: 12px;
+      color: #b4b4b4;
+    }
+
+    .highlighted .addr {
+      color: #ddd;
+    }
   }
 }
 </style>
